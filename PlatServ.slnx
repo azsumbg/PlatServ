@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="PlatServ/PlatServ.vcxproj" Id="82cf92a6-9398-465d-921c-869ae4cb6ff1" />
+</Solution>
