@@ -180,7 +180,7 @@ namespace indll
 
 		T& operator[] (size_t index)
 		{
-			if (index >= next_pos)throw EXCEPTION(BAD_PARAM);
+			if (index >= next_pos)throw EXCEPTION(BAD_INDEX);
 
 			if (!mPtr)throw EXCEPTION(BAD_PTR);
 			
@@ -347,12 +347,12 @@ namespace indll
 			}
 		}
 
-		void insert(T* element, size_t index)
+		void insert(T element, size_t index)
 		{
 			if (!mPtr)throw EXCEPTION(BAD_PTR);
 			else
 			{
-				if (index > next_pos)throw EXCEPTION(BAD_PARAM);
+				if (index > next_pos)throw EXCEPTION(BAD_IDEX);
 				else if (empty())
 				{
 					*mPtr = element;
@@ -385,7 +385,60 @@ namespace indll
 						}
 					}
 				}
+			}
+		}
+		void insert(T* element, size_t index)
+		{
+			if (!mPtr)throw EXCEPTION(BAD_PTR);
+			else
+			{
+				if (index > next_pos)throw EXCEPTION(BAD_INDEX);
+				else if (empty())
+				{
+					*mPtr = *element;
+					++next_pos;
+				}
+				else
+				{
+					if (next_pos + 1 <= max_size)
+					{
+						for (size_t count = next_pos; count > index; --index)mPtr[index] = mPtr[index - 1];
 
+						mPtr[index] = *element;
+						++next_pos;
+					}
+					else
+					{
+						++max_size;
+
+						T* temp{ reinterpret_cast<T*>(realloc(mPtr,max_size * sizeof(T))) };
+
+						if (!temp)throw EXCEPTION(BAD_PTR);
+						else
+						{
+							mPtr = temp;
+
+							for (size_t count = next_pos; count > index; --index)mPtr[index] = mPtr[index - 1];
+
+							mPtr[index] = *element;
+							++next_pos;
+						}
+					}
+				}
+
+			}
+		}
+
+		void erase(size_t index)
+		{
+			if (!mPtr)throw EXCEPTION(BAD_PTR);
+			else
+			{
+				if (index >= next_pos)throw EXCEPTION(BAD_INDEX);
+				
+				for (size_t count = index; count < next_pos - 1; ++count)mPtr[count] = mPtr[count + 1];
+				
+				--next_pos;
 			}
 		}
 
