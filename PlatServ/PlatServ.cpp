@@ -17,6 +17,9 @@ const wchar_t* indll::EXCEPTION::eGet() const
 
 	case BAD_PARAM:
 		return L"Bad parameter passed to a BAG method !";
+
+	case BAD_ITERATOR:
+		return L"Iterator out of bounds passed to a BAG method !";
 	}
 
 	return L"Unknown error occurred in a BAG instance !";
@@ -54,7 +57,7 @@ float indll::RANDIT::operator()(float min, float max)
 
 	std::uniform_real_distribution<double> distr(min, max);
 
-	return distr(*twister);
+	return (float)(distr(*twister));
 }
 
 //////////////////////////////////////////////

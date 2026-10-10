@@ -16,6 +16,7 @@ constexpr int BAD_PTR{ 5001 };
 constexpr int BAD_INDEX{ 5002 };
 constexpr int BAD_PARAM{ 5003 };
 constexpr int BAD_ERR{ 5004 };
+constexpr int BAD_ITERATOR{ 5005 };
 
 constexpr float scr_width{ 1000.0f };
 constexpr float scr_height{ 750.0f };
@@ -352,7 +353,7 @@ namespace indll
 			if (!mPtr)throw EXCEPTION(BAD_PTR);
 			else
 			{
-				if (index > next_pos)throw EXCEPTION(BAD_IDEX);
+				if (index > next_pos)throw EXCEPTION(BAD_INDEX);
 				else if (empty())
 				{
 					*mPtr = element;
@@ -442,6 +443,141 @@ namespace indll
 			}
 		}
 
+		class iterator
+		{
+		private:
+			T* it_ptr{ nullptr };
+			T* container_ptr{ nullptr };
+
+			size_t bag_size{ 0 };
+
+		public:
+
+			friend class BAG<T>;
+
+			using iterator_category = std::contiguous_iterator_tag;
+			using difference_type = ptrdiff_t;
+			using value_type = T;
+			using pointer = T*;
+			using reference = T&;
+
+			iterator(T* init_ptr, BAG<T>& init_bag) 
+			{
+				it_ptr = init_ptr;
+				container_ptr = init_bag.mPtr;
+				bag_size = init_bag.next_pos;
+			}
+
+			reference operator *()
+			{
+				return *it_ptr;
+			}
+
+			pointer operator ->()
+			{
+				return it_ptr;
+			}
+
+			friend bool operator == (const iterator& first, const iterator second)
+			{
+				return first.it_ptr == second.it_ptr;
+			}
+			friend bool operator != (const iterator& first, const iterator second)
+			{
+				return first.it_ptr != second.it_ptr;
+			}
+			friend bool operator < (const iterator & first, const iterator second)
+			{
+				return first.it_ptr < second.it_ptr;
+			}
+			friend bool operator > (const iterator& first, const iterator second)
+			{
+				return first.it_ptr > second.it_ptr;
+			}
+			friend bool operator <= (const iterator& first, const iterator second)
+			{
+				return first.it_ptr <= second.it_ptr;
+			}
+			friend bool operator >= (const iterator& first, const iterator second)
+			{
+				return first.it_ptr >= second.it_ptr;
+			}
+
+			iterator& operator ++()
+			{
+				if (it_ptr == (container_ptr + bag_size))throw EXCEPTION(BAD_ITERATOR);
+				
+				++it_ptr;
+
+				return (*this);
+			}
+			iterator operator ++(int)
+			{
+				iterator temp{ (*this) };
+
+				++(*this);
+
+				return temp;
+			}
+
+			iterator& operator --()
+			{
+				if (it_ptr < container_ptr)throw EXCEPTION(BAD_ITERATOR);
+
+				--it_ptr;
+
+				return (*this);
+			}
+			iterator operator --(int)
+			{
+				iterator temp{ (*this) };
+
+				--(*this);
+
+				return temp;
+			}
+
+			iterator& operator + (size_t step)
+			{
+				if (it_ptr == (container_ptr + bag_size))throw EXCEPTION(BAD_ITERATOR);
+
+				it_ptr += step;
+
+				return (*this);
+			}
+			iterator& operator - (size_t step)
+			{
+				if (it_ptr < container_ptr)throw EXCEPTION(BAD_ITERATOR);
+				
+				it_ptr -= step;
+
+				return (*this);
+			}
+
+		};
+
+		iterator begin()
+		{
+			return iterator(mPtr, (*this));
+		}
+		iterator end()
+		{
+			return iterator((mPtr + next_pos), (*this));
+		}
+
+		void erase(iterator which_pos)
+		{
+			for (size_t count = 0; count < next_pos; ++count)
+			{
+				if (mPtr + count == which_pos.it_ptr)
+				{
+					erase(count);
+					return;
+				}
+			}
+
+			throw EXCEPTION(BAD_ITERATOR);
+		}
 	};
 
 
