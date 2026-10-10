@@ -24,6 +24,8 @@ constexpr float scr_height{ 750.0f };
 constexpr float sky{ 50.0f };
 constexpr float ground{ 750.0f };
 
+constexpr float gravity{ 1.0f };
+
 constexpr D2D1_RECT_F FULL_SCREEN{ 0, 0, scr_width, scr_height };
 constexpr D2D1_RECT_F GAME_SCREEN{ 0, sky, scr_width, ground };
 
@@ -580,7 +582,37 @@ namespace indll
 		}
 	};
 
+	class PLATSERV_API PROTON
+	{
+	protected:
+		float _width{ 1.0f };
+		float _height{ 1.0f };
 
+	public:
+		D2D1_POINT_2F start{};
+		D2D1_POINT_2F end{};
+		D2D1_POINT_2F center{};
+
+		float x_rad{ 0 };
+		float y_rad{ 0 };
+
+		PROTON();
+		PROTON(float sx, float sy);
+		PROTON(D2D1_POINT_2F start_point);
+		PROTON(float sx, float sy, float width, float height);
+		PROTON(D2D1_POINT_2F start_point, float width, float height);
+
+		virtual ~PROTON() {};
+
+		float get_width() const;
+		float get_height() const;
+
+		void set_edges();
+		
+		void set_width(float new_width);
+		void set_height(float new_height);
+		void set_dims(float new_width, float new_height);
+	};
 
 
 
