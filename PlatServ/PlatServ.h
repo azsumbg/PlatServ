@@ -25,12 +25,41 @@ constexpr float sky{ 50.0f };
 constexpr float ground{ 750.0f };
 
 constexpr float gravity{ 1.0f };
+constexpr float linear{ 1.2f };
 
 constexpr D2D1_RECT_F FULL_SCREEN{ 0, 0, scr_width, scr_height };
 constexpr D2D1_RECT_F GAME_SCREEN{ 0, sky, scr_width, ground };
 
+enum class fields {
+	background1 = 0, background2 = 1, intro = 2, pause = 3, castle = 4, ground = 5, platform1 = 6,
+	platform2 = 7, platform3 = 8
+};
+enum class dirs { stop = 0, left = 1, right = 2, up = 3, down = 4 };
+enum class assets { chest = 0, open_chest = 1, life = 2, acid = 3, armor = 4 };
+
 namespace indll
 {
+	struct PLATSERV_API FADING
+	{
+	private:
+		float current_state{ 1.0f };
+		int delay{ 80 };
+		int max_delay{ 80 };
+
+	public:
+		float get_state()
+		{
+			--delay;
+			if (delay <= 0)
+			{
+				delay = max_delay;
+				current_state -= 0.1f;
+			}
+
+			return current_state;
+		}
+	};
+
 	class PLATSERV_API EXCEPTION
 	{
 	private:
@@ -593,6 +622,8 @@ namespace indll
 		D2D1_POINT_2F end{};
 		D2D1_POINT_2F center{};
 
+		D2D1_RECT_F rect{};
+
 		float x_rad{ 0 };
 		float y_rad{ 0 };
 
@@ -614,6 +645,49 @@ namespace indll
 		void set_dims(float new_width, float new_height);
 	};
 
+	class PLATSERV_API FIELD :public PROTON
+	{
+	private:
+		fields type{ fields::background1 };
 
+		int frame{ 0 };
+		int max_frames{ 0 };
+		int max_frame_delay{ 0 };
+		int frame_delay{ 0 };
+
+		FIELD(fields _what_type, float _sx, float _sy);
+
+	public:
+
+		bool move(float gear, dirs to_where);
+
+		int get_frame();
+
+		void Release();
+
+		static FIELD* create(fields what_type, float sx, float sy);
+	};
+
+	class PLATSERV_API SHOT :public PROTON
+	{
+	private:
+		float delta_x{ 0 };
+		float delta_y{ 0 };
+
+		float move_sx{ 0 };
+		float move_sy{ 0 };
+
+		float move_ex{ 0 };
+		float move_ey{ 0 };
+
+		SHOT(float _sx, float _sy, float _ex, float _ey);
+
+	public:
+		int damage{ 20 };
+
+		bool move(float gear);
+
+		void Release();
+	};
 
 }

@@ -78,6 +78,11 @@ indll::PROTON::PROTON()
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 indll::PROTON::PROTON(float sx, float sy)
 {
@@ -95,6 +100,11 @@ indll::PROTON::PROTON(float sx, float sy)
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 indll::PROTON::PROTON(D2D1_POINT_2F start_point)
 {
@@ -112,6 +122,11 @@ indll::PROTON::PROTON(D2D1_POINT_2F start_point)
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 indll::PROTON::PROTON(float sx, float sy, float width, float height)
 {
@@ -129,6 +144,11 @@ indll::PROTON::PROTON(float sx, float sy, float width, float height)
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 indll::PROTON::PROTON(D2D1_POINT_2F start_point, float width, float height)
 {
@@ -146,6 +166,11 @@ indll::PROTON::PROTON(D2D1_POINT_2F start_point, float width, float height)
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 
 float indll::PROTON::get_width() const
@@ -164,6 +189,11 @@ void indll::PROTON::set_edges()
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 
 void indll::PROTON::set_width(float new_width)
@@ -175,6 +205,11 @@ void indll::PROTON::set_width(float new_width)
 	center.x = start.x + x_rad;
 	
 	end.x = start.x + _width;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 void indll::PROTON::set_height(float new_height)
 {
@@ -185,6 +220,11 @@ void indll::PROTON::set_height(float new_height)
 	center.y = start.y + y_rad;
 
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
 }
 void indll::PROTON::set_dims(float new_width, float new_height)
 {
@@ -199,6 +239,198 @@ void indll::PROTON::set_dims(float new_width, float new_height)
 
 	end.x = start.x + _width;
 	end.y = start.y + _height;
+
+	rect.left = start.x;
+	rect.right = end.x;
+	rect.top = start.y;
+	rect.bottom = end.y;
+}
+
+/////////////////////////////////////////////
+
+// CLASS FIELD ******************************
+
+indll::FIELD::FIELD(fields _what_type, float _sx, float _sy) :PROTON(_sx, _sy)
+{
+	type = _what_type;
+
+	switch (type)
+	{
+	case fields::background1:
+		set_dims(1000.0f, 700.0f);
+		max_frames = 5;
+		frame_delay = 13;
+		break;
+
+	case fields::background2:
+		set_dims(1000.0f, 700.0f);
+		max_frames = 2;
+		frame_delay = 30;
+		break;
+
+	case fields::intro:
+		set_dims(1000.0f, 800.0f);
+		max_frames = 17;
+		frame_delay = 4;
+		break;
+
+	case fields::pause:
+		set_dims(1000.0f, 800.0f);
+		max_frames = 16;
+		frame_delay = 4;
+		break;
+
+	case fields::castle:
+		set_dims(200.0f, 310.0f);
+		break;
+
+	case fields::ground:
+		set_dims(1000.0f, 42.0f);
+		break;
+
+	case fields::platform1:
+		set_dims(100.0f, 17.0f);
+		break;
+
+	case fields::platform2:
+		set_dims(120.0f, 18.0f);
+		break;
+
+	case fields::platform3:
+		set_dims(90.0f, 18.0f);
+		break;
+	}
+
+	max_frame_delay = frame_delay;
+}
+
+bool indll::FIELD::move(float gear, dirs to_where)
+{
+	float my_speed = linear + gear / 10.0f;
+
+	switch (to_where)
+	{
+	case dirs::left:
+		start.x -= my_speed;
+		set_edges();
+		if (end.x <= -scr_width)return false;
+		break;
+
+	case dirs::right:
+		start.x += my_speed;
+		set_edges();
+		if (start.x <= 2.0f * scr_width)return false;
+		break;
+	}
+
+	return true;
+}
+
+int indll::FIELD::get_frame()
+{
+	--frame_delay;
+
+	if (frame_delay <= 0)
+	{
+		frame_delay = max_frame_delay;
+
+		++frame;
+
+		if (frame > max_frames)frame = 0;
+	}
+
+	return frame;
+}
+
+void indll::FIELD::Release()
+{
+	delete this;
+}
+
+indll::FIELD* indll::FIELD::create(fields what_type, float sx, float sy)
+{
+	return new FIELD(what_type, sx, sy);
+}
+
+/////////////////////////////////////////////
+
+// CLASS SHOT *******************************
+
+indll::SHOT::SHOT(float _sx, float _sy, float _ex, float _ey) :PROTON(_sx, _sy, 15.0f, 15.0f)
+{
+	float vector_delta_x{ _ex - _sx };
+	float vector_delta_y{ _ey - _sy };
+
+	float vector_delta_lenght = (float)(sqrt((float)(pow(vector_delta_x, 2) + pow(vector_delta_y, 2))));
+
+	delta_x = vector_delta_x / vector_delta_lenght;
+	delta_y = vector_delta_y / vector_delta_lenght;
+
+	move_sx = _sx;
+	move_sy = _sy;
+	move_ex = _ex;
+	move_ey = _ey;
+}
+
+bool indll::SHOT::move(float gear)
+{
+	float my_speed = 5.0f + gear / 10.0f;
+
+	start.x += delta_x * my_speed;
+	start.y += delta_y * my_speed;
+
+	set_edges();
+
+	if (move_sx > move_ex)
+	{
+		if (move_sy > move_ey)
+		{
+			if (center.x <= move_ex && center.y <= move_ey)return false;
+		}
+		else if (move_sy < move_ey)
+		{
+			if (center.x <= move_ex && center.y >= move_ey)return false;
+		}
+		else
+		{
+			if (center.x <= move_ex)return false;
+		}
+	}
+	else if (move_sx < move_ex)
+	{
+		if (move_sy > move_ey)
+		{
+			if (center.x >= move_ex && center.y <= move_ey)return false;
+		}
+		else if (move_sy < move_ey)
+		{
+			if (center.x >= move_ex && center.y >= move_ey)return false;
+		}
+		else
+		{
+			if (center.x >= move_ex)return false;
+		}
+	}
+	else
+	{
+		if (move_sy > move_ey)
+		{
+			if (center.y <= move_ey)return false;
+		}
+		else if (move_sy < move_ey)
+		{
+			if (center.y >= move_ey)return false;
+		}
+		else return false;
+
+	}
+
+	return true;
+}
+
+void indll::SHOT::Release()
+{
+	delete this;
 }
 
 /////////////////////////////////////////////
