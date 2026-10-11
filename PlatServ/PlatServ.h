@@ -24,8 +24,9 @@ constexpr float scr_height{ 750.0f };
 constexpr float sky{ 50.0f };
 constexpr float ground{ 750.0f };
 
-constexpr float gravity{ 1.0f };
+constexpr float gravity{ 3.0f };
 constexpr float linear{ 1.2f };
+constexpr float max_jump{ 100.0f };
 
 constexpr D2D1_RECT_F FULL_SCREEN{ 0, 0, scr_width, scr_height };
 constexpr D2D1_RECT_F GAME_SCREEN{ 0, sky, scr_width, ground };
@@ -36,6 +37,7 @@ enum class fields {
 };
 enum class dirs { stop = 0, left = 1, right = 2, up = 3, down = 4 };
 enum class assets { chest = 0, open_chest = 1, life = 2, acid = 3, armor = 4 };
+enum class states { stop = 0, walk = 1, jump = 2, fall = 3, attack = 4 };
 
 namespace indll
 {
@@ -688,6 +690,45 @@ namespace indll
 		bool move(float gear);
 
 		void Release();
+
+		static SHOT* create(float sx, float sy, float ex, float ey);
 	};
 
+	class PLATSERV_API HERO :public PROTON
+	{
+	private:
+		float delta_x{ 0 };
+		float delta_y{ 0 };
+
+		int frame{ 0 };
+		int max_frames{ 15 };
+		int frame_delay{ 4 };
+		int max_frame_delay{ 4 };
+
+		float move_sx{ 0 };
+		float move_sy{ 0 };
+		float move_ex{ 0 };
+		float move_ey{ 0 };
+
+		void set_path(float _ex, float _ey);
+
+	public:
+		states state = states::stop;
+		dirs dir = dirs::right;
+
+		int damage = 20;
+		int lifes = 100;
+
+		HERO(float sx, float sy);
+
+		int get_frame();
+
+		void move(float gear);
+		void jump(float gear);
+		void fall(float gear, BAG<D2D1_RECT_F>& fields_bag);
+	};
+
+	// FUNCTIONS ***************************************
+
+	bool PLATSERV_API Intersect(D2D1_RECT_F first, D2D1_RECT_F second);
 }

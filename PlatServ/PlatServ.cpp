@@ -433,4 +433,126 @@ void indll::SHOT::Release()
 	delete this;
 }
 
+indll::SHOT* indll::SHOT::create(float sx, float sy, float ex, float ey)
+{
+	return new SHOT(sx, sy, ex, ey);
+}
+
 /////////////////////////////////////////////
+
+// CLASS HERO *******************************
+
+indll::HERO::HERO(float sx, float sy) :PROTON(sx, sy, 90.0f, 88.0f) {};
+
+void indll::HERO::set_path(float _ex, float _ey)
+{
+	move_sx = start.x;
+	move_ex = _ex;
+	move_sy = start.y;
+	move_ey = _ey;
+
+	float vector_delta_x{ move_ex - move_sx };
+	float vector_delta_y{ move_ey - move_sy };
+	float vector_delta_lenght{ (float)(sqrt(pow(vector_delta_x,2) + pow(vector_delta_y,2))) };
+
+	delta_x = vector_delta_x / vector_delta_lenght;
+	delta_y = vector_delta_y / vector_delta_lenght;
+}
+
+int indll::HERO::get_frame()
+{
+	--frame_delay;
+
+	if (frame_delay <= 0)
+	{
+		frame_delay = max_frame_delay;
+		++frame;
+		if (frame > max_frames)frame = 0;
+	}
+	
+	return frame;
+}
+
+void indll::HERO::move(float gear)
+{
+	float my_speed{ linear * 3.0f + gear / 10.0f };
+	
+	switch (dir)
+	{
+	case dirs::right:
+		start.x += my_speed;
+		break;
+
+	case dirs::left:
+		start.x -= my_speed;
+		break;
+	}
+
+	set_edges();
+}
+
+void indll::HERO::jump(float gear)
+{
+	float my_speed{ gravity + gear / 10.0f };
+
+	if (state == states::fall)return;
+
+	if (state != states::jump)
+	{
+		if (dir == dirs::left)set_path(center.x - _width, start.y - max_jump);
+		else set_path(center.x + _width, start.y - max_jump);
+
+		state = states::jump;
+	}
+	else
+	{
+		start.x += delta_x * my_speed;
+		start.y += delta_y * my_speed;
+		set_edges();
+
+		if (center.y <= move_ey)state = states::fall;
+	}
+}
+void indll::HERO::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
+{
+	float my_speed{ gravity + gear / 10.0f };
+	
+	if (state != states::fall)return;
+
+	if (end.y < ground)
+	{
+		start.y += my_speed;
+		set_edges();
+
+		if (!fields_bag.empty())
+		{
+			for (int i = 0; i < fields_bag.size(); ++i)
+			{
+				if (Intersect(rect, fields_bag[i]))
+				{
+					end.y = fields_bag[i].top;
+					start.y = end.y - _height;
+					set_edges();
+					state = states::stop;
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		end.y = ground;
+		start.y = end.y - _height;
+		set_edges();
+		state = states::stop;
+	}
+}
+
+/////////////////////////////////////////////
+
+// FUNCTIONS ********************************
+
+bool indll::Intersect(D2D1_RECT_F first, D2D1_RECT_F second)
+{
+	return(!(first.left >= second.right || first.right <= second.left || first.top >= second.bottom || first.bottom <= second.top));
+}
