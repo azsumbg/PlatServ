@@ -49,6 +49,9 @@ namespace indll
 		int max_delay{ 80 };
 
 	public:
+		assets type{ assets::chest };
+		D2D1_RECT_F position{};
+
 		float get_state()
 		{
 			--delay;
