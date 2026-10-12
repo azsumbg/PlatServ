@@ -33,11 +33,12 @@ constexpr D2D1_RECT_F GAME_SCREEN{ 0, sky, scr_width, ground };
 
 enum class fields {
 	background1 = 0, background2 = 1, intro = 2, pause = 3, castle = 4, ground = 5, platform1 = 6,
-	platform2 = 7, platform3 = 8
+	platform2 = 7, platform3 = 8, cloud1 = 9, cloud2 = 10, cloud3 = 11
 };
 enum class dirs { stop = 0, left = 1, right = 2, up = 3, down = 4 };
 enum class assets { chest = 0, open_chest = 1, life = 2, acid = 3, armor = 4 };
 enum class states { stop = 0, walk = 1, jump = 2, fall = 3, attack = 4 };
+enum class evils { angry = 1, caveman = 1, zombie = 2 };
 
 namespace indll
 {
@@ -729,6 +730,55 @@ namespace indll
 		void move(float gear);
 		void jump(float gear);
 		void fall(float gear, BAG<D2D1_RECT_F>& fields_bag);
+	};
+
+	class PLATSERV_API EVILS :public PROTON
+	{
+	private:
+		evils type{ evils::angry };
+
+		float delta_x{ 0 };
+		float delta_y{ 0 };
+		float _speed{ linear };
+
+		float move_sx{ 0 };
+		float move_ex{ 0 };
+		float move_sy{ 0 };
+		float move_ey{ 0 };
+
+		int frame{ 0 };
+		int max_frames{ 0 };
+		int frame_delay{ 0 };
+		int max_frame_delay{ 0 };
+
+		int attack_delay{ 0 };
+		int max_attack_delay{ 0 };
+
+		EVILS(evils _what, float _sx, float _sy);
+
+	public:
+		dirs dir{ dirs::left };
+		states state{ states::walk };
+		int lifes{ 0 };
+		int damage{ 0 };
+
+		evils get_type()const;
+
+		void set_path(float _ex, float _ey);
+
+		float get_target_x()const;
+		float get_target_y()const;
+
+		int get_frame();
+		int attack();
+
+		void move(float gear);
+		void jump(float gear);
+		void fall(float gear, BAG<D2D1_RECT_F>& fields_bag);
+
+		void Release();
+
+		static EVILS* create(evils what, float sx, float sy);
 	};
 
 	// FUNCTIONS ***************************************

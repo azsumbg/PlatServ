@@ -299,6 +299,18 @@ indll::FIELD::FIELD(fields _what_type, float _sx, float _sy) :PROTON(_sx, _sy)
 	case fields::platform3:
 		set_dims(90.0f, 18.0f);
 		break;
+
+	case fields::cloud1:
+		set_dims(200.0f, 79.0f);
+		break;
+
+	case fields::cloud2:
+		set_dims(180.0f, 81.0f);
+		break;
+
+	case fields::cloud3:
+		set_dims(120.0f, 63.0f);
+		break;
 	}
 
 	max_frame_delay = frame_delay;
@@ -307,6 +319,10 @@ indll::FIELD::FIELD(fields _what_type, float _sx, float _sy) :PROTON(_sx, _sy)
 bool indll::FIELD::move(float gear, dirs to_where)
 {
 	float my_speed = linear + gear / 10.0f;
+
+	if (type == fields::cloud1)my_speed -= 0.7f;
+	if (type == fields::cloud2)my_speed -= 0.6;
+	if (type == fields::cloud3)my_speed -= 0.5f;
 
 	switch (to_where)
 	{
@@ -546,6 +562,191 @@ void indll::HERO::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 		set_edges();
 		state = states::stop;
 	}
+}
+
+/////////////////////////////////////////////
+
+// CLASS EVILS ******************************
+
+indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
+{
+	type = _what;
+
+	switch (type)
+	{
+	case evils::angry:
+		set_dims(49.0f, 85.0f);
+		_speed -= 0.4f;
+		max_frames = 3;
+		frame_delay = 20;
+		attack_delay = 90;
+		lifes = 80;
+		damage = 10;
+		break;
+
+	case evils::caveman:
+		set_dims(96.0f, 92.0f);
+		_speed -= 0.3f;
+		max_frames = 7;
+		frame_delay = 10;
+		attack_delay = 110;
+		lifes = 100;
+		damage = 15;
+		break;
+
+	case evils::zombie:
+		set_dims(66.0f, 90.0f);
+		_speed -= 0.2f;
+		max_frames = 52;
+		frame_delay = 1;
+		attack_delay = 80;
+		lifes = 70;
+		damage = 8;
+		break;
+	}
+
+	max_attack_delay = attack_delay;
+	max_frame_delay = frame_delay;
+}
+
+evils indll::EVILS::get_type()const
+{
+	return type;
+}
+
+void indll::EVILS::set_path(float _ex, float _ey)
+{
+	move_sx = start.x;
+	move_ex = _ex;
+	move_sy = start.y;
+	move_ey = _ey;
+
+	float vec_delta_x{ move_ex - move_sx };
+	float vec_delta_y{ move_ey - move_sy };
+	float vec_delta_lenght{ (float)(sqrt(pow(vec_delta_x,2) + pow(vec_delta_y,2))) };
+
+	delta_x = vec_delta_x / vec_delta_lenght;
+	delta_y = vec_delta_y / vec_delta_lenght;
+}
+
+float indll::EVILS::get_target_x()const
+{
+	return move_ex;
+}
+float indll::EVILS::get_target_y()const
+{
+	return move_ey;
+}
+
+int indll::EVILS::get_frame()
+{
+	--frame_delay;
+
+	if (frame_delay <= 0)
+	{
+		frame_delay = max_frame_delay;
+		++frame;
+		if (frame > max_frames)frame = 0;
+	}
+
+	return frame;
+}
+int indll::EVILS::attack()
+{
+	--attack_delay;
+
+	if (attack_delay <= 0)
+	{
+		attack_delay = max_attack_delay;
+
+		return damage;
+	}
+
+	return 0;
+}
+
+void indll::EVILS::move(float gear)
+{
+	float my_speed{ _speed + gear / 10.0f };
+
+	switch (dir)
+	{
+	case dirs::right:
+		start.x += my_speed;
+		break;
+
+	case dirs::left:
+		start.x -= my_speed;
+		break;
+	}
+
+	set_edges();
+}
+void indll::EVILS::jump(float gear)
+{
+	float my_speed{ gravity + gear / 10.0f };
+
+	if (state == states::fall)return;
+
+	if (state != states::jump)
+	{
+		if (dir == dirs::left)set_path(center.x - _width, start.y - max_jump);
+		else set_path(center.x + _width, start.y - max_jump);
+
+		state = states::jump;
+	}
+	else
+	{
+		start.x += delta_x * my_speed;
+		start.y += delta_y * my_speed;
+		set_edges();
+
+		if (center.y <= move_ey)state = states::fall;
+	}
+}
+void indll::EVILS::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
+{
+	float my_speed{ gravity + gear / 10.0f };
+
+	if (state != states::fall)return;
+
+	if (end.y < ground)
+	{
+		start.y += my_speed;
+		set_edges();
+
+		if (!fields_bag.empty())
+		{
+			for (int i = 0; i < fields_bag.size(); ++i)
+			{
+				if (Intersect(rect, fields_bag[i]))
+				{
+					end.y = fields_bag[i].top;
+					start.y = end.y - _height;
+					set_edges();
+					state = states::stop;
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		end.y = ground;
+		start.y = end.y - _height;
+		set_edges();
+		state = states::stop;
+	}
+}
+
+void indll::EVILS::Release()
+{
+	delete this;
+}
+
+indll::EVILS* indll::EVILS::create(evils what, float sx, float sy)
+{
+	return new EVILS(what, sx, sy);
 }
 
 /////////////////////////////////////////////
