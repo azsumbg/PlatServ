@@ -321,7 +321,7 @@ bool indll::FIELD::move(float gear, dirs to_where)
 	float my_speed = linear + gear / 10.0f;
 
 	if (type == fields::cloud1)my_speed -= 0.7f;
-	if (type == fields::cloud2)my_speed -= 0.6;
+	if (type == fields::cloud2)my_speed -= 0.6f;
 	if (type == fields::cloud3)my_speed -= 0.5f;
 
 	switch (to_where)
@@ -681,6 +681,9 @@ void indll::EVILS::move(float gear)
 	}
 
 	set_edges();
+
+	if (start.x < 0)dir = dirs::right;
+	if (end.x > scr_width)dir = dirs::left;
 }
 void indll::EVILS::jump(float gear)
 {
@@ -756,4 +759,86 @@ indll::EVILS* indll::EVILS::create(evils what, float sx, float sy)
 bool indll::Intersect(D2D1_RECT_F first, D2D1_RECT_F second)
 {
 	return(!(first.left >= second.right || first.right <= second.left || first.top >= second.bottom || first.bottom <= second.top));
+}
+
+float indll::Distance(D2D1_POINT_2F first, D2D1_POINT_2F second)
+{
+	float a{ (float)(pow(second.x - first.x, 2)) };
+	float b{ (float)(pow(second.y - first.y, 2)) };
+
+	return (float)(sqrt(a + b));
+}
+
+void indll::Sort(BAG<D2D1_POINT_2F>& bag, D2D1_POINT_2F ref)
+{
+	if (bag.size() < 2)return;
+
+	bool ok = false;
+
+	while (!ok)
+	{
+		ok = true;
+
+		for (size_t i = 0; i < bag.size() - 1; ++i)
+		{
+			if (Distance(bag[i], ref) > Distance(bag[i + 1], ref))
+			{
+				D2D1_POINT_2F temp = bag[i];
+
+				bag[i] = bag[i + 1];
+				bag[i + 1] = temp;
+
+				ok = false;
+			}
+		}
+	}
+}
+
+void indll::EvilNextMove(EVILS& unit, BAG<D2D1_POINT_2F>& bAssetsCenters, BAG<D2D1_RECT_F>& bGrounds, D2D1_POINT_2F hero_center,
+	float level_gear)
+{
+	if (unit.state == states::attack)
+	{
+		if (Distance(unit.center, hero_center) > unit.get_width() / 2.0f
+			&& Distance(unit.center, hero_center) > unit.get_height() / 2.0f)
+		{
+			unit.state = states::walk;
+			if (hero_center.x > unit.center.x)unit.dir = dirs::right;
+			else unit.dir = dirs::left;
+			return;
+		}
+	}
+	else if (unit.state == states::walk)
+	{
+		if (Distance(unit.center, hero_center) <= unit.get_width() / 2.0f
+			&& Distance(unit.center, hero_center) <= unit.get_height() / 2.0f)
+		{
+			unit.state = states::attack;
+			return;
+		}
+		else if (!bGrounds.empty() && unit.end.y >= ground)
+		{
+			for (size_t i = 0; i < bGrounds.size(); ++i)
+			{
+				if (Intersect(bGrounds[i], unit.rect))
+				{
+					unit.state = states::jump;
+					break;
+				}
+			}
+		}
+		else
+		{
+			Sort(bAssetsCenters, unit.center);
+
+			if (Distance(unit.center, bAssetsCenters.front()) <= unit.get_width() / 2.0f
+				&& Distance(unit.center, bAssetsCenters.front()) <= unit.get_height() / 2.0f)
+			{
+				unit.set_path(bAssetsCenters.front().x, bAssetsCenters.front().y);
+				return;
+			}
+		}
+	}
+	else if (unit.state == states::jump)unit.jump(level_gear);
+	else if (unit.state == states::fall)unit.fall(level_gear, bGrounds);
 }

@@ -38,7 +38,7 @@ enum class fields {
 enum class dirs { stop = 0, left = 1, right = 2, up = 3, down = 4 };
 enum class assets { chest = 0, open_chest = 1, life = 2, acid = 3, armor = 4 };
 enum class states { stop = 0, walk = 1, jump = 2, fall = 3, attack = 4 };
-enum class evils { angry = 1, caveman = 1, zombie = 2 };
+enum class evils { angry = 0, caveman = 1, zombie = 2 };
 
 namespace indll
 {
@@ -784,4 +784,11 @@ namespace indll
 	// FUNCTIONS ***************************************
 
 	bool PLATSERV_API Intersect(D2D1_RECT_F first, D2D1_RECT_F second);
+
+	float PLATSERV_API Distance(D2D1_POINT_2F first, D2D1_POINT_2F second);
+
+	void PLATSERV_API Sort(BAG<D2D1_POINT_2F>& bag, D2D1_POINT_2F ref);
+
+	void PLATSERV_API EvilNextMove(EVILS& unit, BAG<D2D1_POINT_2F>& bAssetsCenters, BAG<D2D1_RECT_F>& bGrounds, 
+		D2D1_POINT_2F hero_center, float level_gear);
 }
