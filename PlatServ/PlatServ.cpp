@@ -514,14 +514,14 @@ void indll::HERO::move(float gear)
 
 void indll::HERO::jump(float gear)
 {
-	float my_speed{ gravity + gear / 10.0f };
+	float my_speed{ gravity + 2.0f + gear / 10.0f };
 
 	if (state == states::fall)return;
 
 	if (state != states::jump)
 	{
 		if (dir == dirs::left)set_path(center.x - _width, start.y - max_jump);
-		else set_path(center.x + _width, start.y - max_jump);
+		else set_path(end.x, start.y - max_jump);
 
 		state = states::jump;
 	}
@@ -536,11 +536,11 @@ void indll::HERO::jump(float gear)
 }
 void indll::HERO::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 {
-	float my_speed{ gravity + gear / 10.0f };
+	float my_speed{ gravity + 2.0f + gear / 10.0f };
 	
 	if (state != states::fall)return;
 
-	if (end.y < ground)
+	if (end.y < ground - 42.0f)
 	{
 		start.y += my_speed;
 		set_edges();
@@ -562,7 +562,7 @@ void indll::HERO::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 	}
 	else
 	{
-		end.y = ground;
+		end.y = ground - 42.0f;
 		start.y = end.y - _height;
 		set_edges();
 		state = states::stop;
@@ -692,14 +692,14 @@ void indll::EVILS::move(float gear)
 }
 void indll::EVILS::jump(float gear)
 {
-	float my_speed{ gravity + gear / 10.0f };
+	float my_speed{ gravity + 2.0f + gear / 10.0f };
 
 	if (state == states::fall)return;
 
 	if (state != states::jump)
 	{
 		if (dir == dirs::left)set_path(center.x - _width, start.y - max_jump);
-		else set_path(center.x + _width, start.y - max_jump);
+		else set_path(end.x, start.y - max_jump);
 
 		state = states::jump;
 	}
@@ -714,11 +714,11 @@ void indll::EVILS::jump(float gear)
 }
 void indll::EVILS::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 {
-	float my_speed{ gravity + gear / 10.0f };
+	float my_speed{ gravity + 2.0f + gear / 10.0f };
 
 	if (state != states::fall)return;
 
-	if (end.y < ground)
+	if (end.y < ground - 42.0f)
 	{
 		start.y += my_speed;
 		set_edges();
@@ -740,7 +740,7 @@ void indll::EVILS::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 	}
 	else
 	{
-		end.y = ground;
+		end.y = ground - 42.0f;
 		start.y = end.y - _height;
 		set_edges();
 		state = states::stop;
