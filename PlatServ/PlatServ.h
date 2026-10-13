@@ -667,6 +667,8 @@ namespace indll
 
 		bool move(float gear, dirs to_where);
 
+		fields get_type() const;
+
 		int get_frame();
 
 		void Release();

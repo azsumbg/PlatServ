@@ -342,6 +342,11 @@ bool indll::FIELD::move(float gear, dirs to_where)
 	return true;
 }
 
+fields indll::FIELD::get_type() const
+{
+	return type;
+}
+
 int indll::FIELD::get_frame()
 {
 	--frame_delay;
