@@ -335,7 +335,7 @@ bool indll::FIELD::move(float gear, dirs to_where)
 	case dirs::right:
 		start.x += my_speed;
 		set_edges();
-		if (start.x <= 2.0f * scr_width)return false;
+		if (start.x >= 2.0f * scr_width)return false;
 		break;
 	}
 
@@ -501,11 +501,11 @@ void indll::HERO::move(float gear)
 	switch (dir)
 	{
 	case dirs::right:
-		start.x += my_speed;
+		if (end.x + my_speed <= scr_width)start.x += my_speed;
 		break;
 
 	case dirs::left:
-		start.x -= my_speed;
+		if (start.x - my_speed >= 0)start.x -= my_speed;
 		break;
 	}
 
@@ -520,8 +520,8 @@ void indll::HERO::jump(float gear)
 
 	if (state != states::jump)
 	{
-		if (dir == dirs::left)set_path(center.x - _width, start.y - max_jump);
-		else set_path(end.x, start.y - max_jump);
+		if (dir == dirs::left)set_path(start.x - x_rad, start.y - max_jump);
+		else set_path(center.x, start.y - max_jump);
 
 		state = states::jump;
 	}
@@ -530,6 +530,18 @@ void indll::HERO::jump(float gear)
 		start.x += delta_x * my_speed;
 		start.y += delta_y * my_speed;
 		set_edges();
+
+		if (start.x < 0)
+		{
+			start.x = 0;
+			set_edges();
+		}
+		else if (end.x > scr_width)
+		{
+			end.x = scr_width;
+			start.x = end.x - _width;
+			set_edges();
+		}
 
 		if (center.y <= move_ey)state = states::fall;
 	}
@@ -581,7 +593,7 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 	{
 	case evils::angry:
 		set_dims(49.0f, 85.0f);
-		_speed -= 0.4f;
+		_speed -= 1.3f;
 		max_frames = 3;
 		frame_delay = 20;
 		attack_delay = 90;
@@ -591,7 +603,7 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 
 	case evils::caveman:
 		set_dims(96.0f, 92.0f);
-		_speed -= 0.3f;
+		_speed -= 1.2f;
 		max_frames = 7;
 		frame_delay = 10;
 		attack_delay = 110;
@@ -601,7 +613,7 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 
 	case evils::zombie:
 		set_dims(66.0f, 90.0f);
-		_speed -= 0.2f;
+		_speed -= 1.1f;
 		max_frames = 52;
 		frame_delay = 1;
 		attack_delay = 80;
@@ -609,6 +621,8 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 		damage = 8;
 		break;
 	}
+
+	_speed += linear;
 
 	max_attack_delay = attack_delay;
 	max_frame_delay = frame_delay;
@@ -698,8 +712,8 @@ void indll::EVILS::jump(float gear)
 
 	if (state != states::jump)
 	{
-		if (dir == dirs::left)set_path(center.x - _width, start.y - max_jump);
-		else set_path(end.x, start.y - max_jump);
+		if (dir == dirs::left)set_path(start.x - x_rad, start.y - max_jump);
+		else set_path(center.x, start.y - max_jump);
 
 		state = states::jump;
 	}
@@ -743,7 +757,7 @@ void indll::EVILS::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 		end.y = ground - 42.0f;
 		start.y = end.y - _height;
 		set_edges();
-		state = states::stop;
+		state = states::walk;
 	}
 }
 
@@ -821,13 +835,15 @@ void indll::EvilNextMove(EVILS& unit, BAG<D2D1_POINT_2F>& bAssetsCenters, BAG<D2
 			unit.state = states::attack;
 			return;
 		}
-		else if (!bGrounds.empty() && unit.end.y >= ground)
+		else if (!bGrounds.empty() && unit.end.y >= ground - 42.0f)
 		{
 			for (size_t i = 0; i < bGrounds.size(); ++i)
 			{
 				if (Intersect(bGrounds[i], unit.rect))
 				{
 					unit.state = states::jump;
+					if (unit.dir == dirs::left)unit.set_path(unit.start.x - unit.x_rad, unit.start.y - max_jump);
+					else unit.set_path(unit.center.x, unit.start.y - max_jump);
 					break;
 				}
 			}
