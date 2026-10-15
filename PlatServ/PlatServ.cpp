@@ -593,7 +593,7 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 	{
 	case evils::angry:
 		set_dims(49.0f, 85.0f);
-		_speed -= 1.3f;
+		_speed += 0.3f;
 		max_frames = 3;
 		frame_delay = 20;
 		attack_delay = 90;
@@ -603,7 +603,7 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 
 	case evils::caveman:
 		set_dims(96.0f, 92.0f);
-		_speed -= 1.2f;
+		_speed += 0.2f;
 		max_frames = 7;
 		frame_delay = 10;
 		attack_delay = 110;
@@ -613,7 +613,7 @@ indll::EVILS::EVILS(evils _what, float _sx, float _sy) :PROTON(_sx, _sy)
 
 	case evils::zombie:
 		set_dims(66.0f, 90.0f);
-		_speed -= 1.1f;
+		_speed += 0.1f;
 		max_frames = 52;
 		frame_delay = 1;
 		attack_delay = 80;
@@ -681,6 +681,7 @@ int indll::EVILS::attack()
 		return damage;
 	}
 
+	
 	return 0;
 }
 
@@ -700,23 +701,12 @@ void indll::EVILS::move(float gear)
 	}
 
 	set_edges();
-
-	if (start.x < 0)dir = dirs::right;
-	if (end.x > scr_width)dir = dirs::left;
 }
 void indll::EVILS::jump(float gear)
 {
 	float my_speed{ gravity + 2.0f + gear / 10.0f };
 
 	if (state == states::fall)return;
-
-	if (state != states::jump)
-	{
-		if (dir == dirs::left)set_path(start.x - x_rad, start.y - max_jump);
-		else set_path(center.x, start.y - max_jump);
-
-		state = states::jump;
-	}
 	else
 	{
 		start.x += delta_x * my_speed;
@@ -729,8 +719,6 @@ void indll::EVILS::jump(float gear)
 void indll::EVILS::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 {
 	float my_speed{ gravity + 2.0f + gear / 10.0f };
-
-	if (state != states::fall)return;
 
 	if (end.y < ground - 42.0f)
 	{
@@ -746,7 +734,7 @@ void indll::EVILS::fall(float gear, BAG<D2D1_RECT_F>& fields_bag)
 					end.y = fields_bag[i].top;
 					start.y = end.y - _height;
 					set_edges();
-					state = states::stop;
+					state = states::walk;
 					break;
 				}
 			}
@@ -848,6 +836,7 @@ void indll::EvilNextMove(EVILS& unit, BAG<D2D1_POINT_2F>& bAssetsCenters, BAG<D2
 				}
 			}
 		}
+		else if (unit.end.y < ground - 42.0f)unit.fall(level_gear, bGrounds);
 		else
 		{
 			Sort(bAssetsCenters, unit.center);
@@ -861,5 +850,5 @@ void indll::EvilNextMove(EVILS& unit, BAG<D2D1_POINT_2F>& bAssetsCenters, BAG<D2
 		}
 	}
 	else if (unit.state == states::jump)unit.jump(level_gear);
-	else if (unit.state == states::fall)unit.fall(level_gear, bGrounds);
+	else unit.state = states::walk;
 }
